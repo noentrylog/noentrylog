@@ -1,54 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My HTML Page</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        .content {
-            background-color: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Minimal Portfolio — Room + Works</title>
+  <meta name="description" content="A minimal, atmospheric portfolio with a room-esque landing, sound toggle, and smooth section transitions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0b0b; --fg:#e8e8e8; --muted:#b9b9b9; --accent:#8ab4ff; --grid:#1a1a1a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      line-height:1.6; letter-spacing:.01em;
+    }
+    a{color:inherit; text-decoration:none}
+    .visually-hidden{position:absolute!important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px)}
+
+    /* Global layout */
+    .logo{
+      position:fixed; left:24px; top:20px; z-index:30; font-weight:800; letter-spacing:.06em;
+    }
+    .logo .sub{display:block; font-weight:400; color:var(--muted); font-size:.8rem; letter-spacing:.08em}
+
+    .sound-toggle{
+      position:fixed; left:24px; bottom:22px; z-index:30; display:flex; gap:8px; align-items:center; cursor:pointer;
+      font-weight:600; font-size:.9rem; opacity:.85; user-select:none;
+    }
+    .sound-indicator{display:inline-flex; gap:6px; align-items:center}
+    .dot{width:8px; height:8px; border-radius:50%; background:#444}
+    .dot.on{background:var(--accent); box-shadow:0 0 10px var(--accent)}
+
+    /* Right rail navigation */
+    nav{
+      position:fixed; right:20px; top:50%; translate:0 -50%; z-index:30; display:flex; flex-direction:column; gap:14px;
+      text-transform:lowercase; font-weight:600; letter-spacing:.08em; align-items:flex-end;
+    }
+    nav a{opacity:.65; transition:opacity .2s ease, transform .2s ease}
+    nav a:hover{opacity:1; transform:translateX(-2px)}
+    nav a.active{opacity:1}
+
+    /* Sections */
+    .section{min-height:100svh; position:relative; display:grid; place-items:center; padding:80px 10vw; opacity:0; transform:translateY(8px); transition:opacity .6s ease, transform .6s ease}
+    .section.is-active{opacity:1; transform:none}
+    .kicker{color:var(--muted); text-transform:uppercase; letter-spacing:.2em; font-size:.72rem}
+    h1,h2{font-family:"Playfair Display",serif; line-height:1.1; margin:.2em 0}
+    h1{font-size:clamp(36px,8vw,88px)}
+    h2{font-size:clamp(26px,4.5vw,44px)}
+    p{max-width:62ch}
+
+    /* Home / Room */
+    #room-wrap{position:absolute; inset:0; overflow:hidden}
+    #room-canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:radial-gradient(1200px 800px at 70% 30%, #121212 0%, #0b0b0b 60%, #060606 100%)}
+    .room-overlay{position:relative; z-index:1; text-align:center}
+    .room-overlay .cta{margin-top:14px; display:flex; gap:12px; justify-content:center}
+    .btn{
+      padding:10px 16px; border:1px solid #2a2a2a; border-radius:999px; background:#121212; color:var(--fg); font-weight:600;
+      backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+      transition:transform .12s ease, border-color .2s ease, background .2s ease; cursor:pointer;
+    }
+    .btn:hover{transform:translateY(-1px); border-color:#3a3a3a}
+
+    /* Works */
+    .masonry{column-count:1; column-gap:16px}
+    @media(min-width:700px){.masonry{column-count:2}}
+    @media(min-width:1100px){.masonry{column-count:3}}
+    .masonry figure{break-inside:avoid; margin:0 0 16px; background:#0f0f0f; border-radius:14px; overflow:hidden; border:1px solid #1a1a1a}
+    .masonry img{width:100%; height:auto; display:block; filter:grayscale(.2);}
+    .masonry figcaption{padding:10px 12px; font-size:.85rem; color:var(--muted); display:flex; justify-content:space-between}
+
+    /* About / Piano / Record / Contact blocks */
+    .grid{display:grid; grid-template-columns:1.2fr .8fr; gap:min(8vw,64px); align-items:center}
+    @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+    .card{background:#0f0f0f; border:1px solid #1a1a1a; border-radius:16px; padding:24px}
+
+    /* Footer/back */
+    .back-btn{position:fixed; left:24px; top:60px; z-index:30}
+
+    /* Loader */
+    .loader{position:fixed; inset:0; display:grid; place-items:center; background:#000; color:#fff; z-index:50; transition:opacity .6s ease;}
+    .loader.hidden{opacity:0; pointer-events:none}
+    .lds{display:inline-block; width:64px; height:64px; border:3px solid #333; border-radius:50%; border-top-color:#fff; animation:spin 1.2s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Custom cursor */
+    .cursor{position:fixed; left:0; top:0; width:22px; height:22px; border:1px solid #444; border-radius:50%; pointer-events:none; z-index:40; mix-blend-mode:difference; opacity:.8; transform:translate(-50%,-50%)}
+  </style>
 </head>
 <body>
-    <h1>Welcome to My HTML Page</h1>
-    
-    <div class="content">
-        <h2>About This Page</h2>
-        <p>This is a basic HTML file that you can customize and build upon. It includes:</p>
-        <ul>
-            <li>Proper HTML5 structure</li>
-            <li>Responsive viewport meta tag</li>
-            <li>Basic CSS styling</li>
-            <li>Semantic HTML elements</li>
-        </ul>
-        
-        <h2>Getting Started</h2>
-        <p>You can now:</p>
-        <ul>
-            <li>Edit the content</li>
-            <li>Add more styling</li>
-            <li>Include JavaScript functionality</li>
-            <li>Link to other pages or resources</li>
-        </ul>
+  <div class="loader" id="loader">
+    <div>
+      <div class="lds" aria-hidden="true"></div>
+      <p style="margin-top:12px; text-align:center; letter-spacing:.12em">LOADING…</p>
     </div>
-    
-    <footer style="text-align: center; margin-top: 40px; color: #666;">
-        <p>&copy; 2024 My HTML Page</p>
-    </footer>
+  </div>
+
+  <div class="logo">K.<span style="opacity:.6">Studio</span><span class="sub">minimal portfolio</span></div>
+  <button class="btn back-btn" id="backBtn" aria-controls="home">back to room</button>
+
+  <div class="sound-toggle" id="soundToggle" role="button" aria-pressed="false">
+    <span class="sound-indicator"><span class="dot" id="dot"></span><span id="soundLabel">SOUND: OFF</span></span>
+  </div>
+
+  <nav id="nav">
+    <a href="#about" data-target="about">about</a>
+    <a href="#piano" data-target="piano">piano</a>
+    <a href="#record" data-target="record">record</a>
+    <a href="#works" data-target="works">works</a>
+    <a href="#contact" data-target="contact">contact</a>
+  </nav>
+
+  <!-- HOME / ROOM -->
+  <section class="section is-active" id="home" aria-label="Home">
+    <div id="room-wrap" aria-hidden="true">
+      <canvas id="room-canvas"></canvas>
+    </div>
+    <div class="room-overlay">
+      <div class="kicker">portfolio</div>
+      <h1>Enter the Room</h1>
+      <p>Atmospheric landing with ambient sound, subtle motion, and a right‑rail menu. Clean, distraction‑free, fast.</p>
+      <div class="cta">
+        <button class="btn" id="enter">Enter</button>
+        <button class="btn" id="mute">Turn on ambient sound?</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section" id="about" aria-label="About">
+    <div class="grid">
+      <div>
+        <div class="kicker">about</div>
+        <h2>Creative generalist with a camera</h2>
+        <p>Short bio goes here. Keep it human, specific, and outcome‑focused. Mention exhibitions, clients, awards, or collaborations. Keep the edit tight.</p>
+      </div>
+      <div class="card">
+        <p><strong>Focus:</strong> portrait, editorial, street</p>
+        <p><strong>Location:</strong> Bangkok, TH</p>
+        <p><strong>Available for:</strong> commissions, collabs, tours</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIANO -->
+  <section class="section" id="piano" aria-label="Piano">
+    <div class="grid">
+      <div>
+        <div class="kicker">piano</div>
+        <h2>Minimal compositions</h2>
+        <p>Embed pieces, sketches, or live recordings. Use the sound toggle to keep the UX respectful in public spaces.</p>
+      </div>
+      <div class="card">
+        <audio id="track1" controls preload="none">
+          <source src="https://cdn.pixabay.com/download/audio/2021/11/22/audio_19c5172f4e.mp3?filename=ambient-10662.mp3" type="audio/mpeg">
+        </audio>
+        <small style="display:block; color:var(--muted); margin-top:6px">Royalty‑free preview audio via Pixabay (replace with your own).</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECORD -->
+  <section class="section" id="record" aria-label="Record">
+    <div class="grid">
+      <div>
+        <div class="kicker">record</div>
+        <h2>Field notes</h2>
+        <p>Short essays, project logs, behind‑the‑scenes. Keep each entry scannable; ship photos and one key insight per post.</p>
+      </div>
+      <div class="card">
+        <ul style="margin:0; padding-left:18px">
+          <li>Tokyo dusk study — color vs. grain.</li>
+          <li>Bangkok monsoon — long exposure workflow.</li>
+          <li>Portraits on the move — traveling light.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKS -->
+  <section class="section" id="works" aria-label="Works">
+    <div style="width:100%">
+      <div class="kicker">works</div>
+      <h2>Selected projects</h2>
+      <div class="masonry" id="gallery">
+        <figure>
+          <img alt="work 1" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop" loading="lazy"/>
+          <figcaption><span>City fog</span><span>2024</span></figcaption>
+        </figure>
+        <figure>
+          <img alt="work 2" src="https://images.unsplash.com/photo-1520975922321-85ddd9d8b3d1?q=80&w=1200&auto=format&fit=crop" loading="lazy"/>
+          <figcaption><span>Night ride</span><span>2023</span></figcaption>
+        </figure>
+        <figure>
+          <img alt="work 3" src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1200&auto=format&fit=crop" loading="lazy"/>
+          <figcaption><span>Beach glass</span><span>2025</span></figcaption>
+        </figure>
+        <figure>
+          <img alt="work 4" src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop" loading="lazy"/>
+          <figcaption><span>Forest line</span><span>2022</span></figcaption>
+        </figure>
+        <figure>
+          <img alt="work 5" src="https://images.unsplash.com/photo-1526045612212-70caf35c14df?q=80&w=1200&auto=format&fit=crop" loading="lazy"/>
+          <figcaption><span>Neon rain</span><span>2024</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section" id="contact" aria-label="Contact">
+    <div class="grid">
+      <div>
+        <div class="kicker">contact</div>
+        <h2>Let’s collaborate</h2>
+        <p>One line on value. One line on availability. Keep it actionable.</p>
+      </div>
+      <div class="card">
+        <form action="mailto:hello@example.com" method="post" enctype="text/plain" onsubmit="window.setTimeout(()=>alert('Thanks! Opened your mail app.'), 200)">
+          <label>Name<br><input required placeholder="Your name" style="width:100%; padding:10px; border-radius:10px; background:#0b0b0b; color:var(--fg); border:1px solid #1a1a1a"/></label>
+          <br><br>
+          <label>Message<br><textarea required rows="4" placeholder="Project, timing, budget…" style="width:100%; padding:10px; border-radius:10px; background:#0b0b0b; color:var(--fg); border:1px solid #1a1a1a"></textarea></label>
+          <br><br>
+          <button class="btn" type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div class="cursor" id="cursor"></div>
+
+  <script>
+    // --- Loader
+    window.addEventListener('load', ()=>{
+      setTimeout(()=>document.getElementById('loader').classList.add('hidden'), 300);
+    });
+
+    // --- Section switching + nav state
+    const sections=[...document.querySelectorAll('.section')];
+    const links=[...document.querySelectorAll('nav a')];
+    const backBtn=document.getElementById('backBtn');
+    function activate(id){
+      sections.forEach(s=>s.classList.toggle('is-active', s.id===id));
+      links.forEach(a=>a.classList.toggle('active', a.dataset.target===id));
+      if(id==='home') backBtn.style.opacity=.8; else backBtn.style.opacity=1;
+    }
+    links.forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); activate(a.dataset.target); }));
+    backBtn.addEventListener('click', ()=>activate('home'));
+    document.getElementById('enter').addEventListener('click', ()=>activate('about'));
+
+    // --- Cursor
+    const cursor=document.getElementById('cursor');
+    window.addEventListener('pointermove', e=>{
+      cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px';
+    });
+
+    // --- Minimal “room”: drifting particles on canvas
+    const c=document.getElementById('room-canvas');
+    const ctx=c.getContext('2d');
+    let W,H,pxRatio;
+    const P=120; // particle count
+    const parts=[];
+    function resize(){
+      pxRatio = Math.min(window.devicePixelRatio||1, 2);
+      W= c.width = Math.floor(innerWidth*pxRatio);
+      H= c.height= Math.floor(innerHeight*pxRatio);
+    }
+    function reset(p){
+      p.x=Math.random()*W; p.y=Math.random()*H; p.vx=(Math.random()-.5)*.2*pxRatio; p.vy=(Math.random()-.5)*.2*pxRatio; p.r=(Math.random()*2+0.5)*pxRatio; p.a=Math.random()*.6+.2;
+    }
+    for(let i=0;i<P;i++){parts[i]={};}
+    function init(){ resize(); parts.forEach(reset); }
+    window.addEventListener('resize', init); init();
+    (function loop(){
+      requestAnimationFrame(loop);
+      ctx.fillStyle='#0b0b0b'; ctx.fillRect(0,0,W,H);
+      for(const p of parts){
+        p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>W||p.y<0||p.y>H) reset(p);
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(200,200,200,${p.a})`; ctx.fill();
+      }
+    })();
+
+    // --- Ambient sound using Web Audio API (no external file required)
+    const soundToggle=document.getElementById('soundToggle');
+    const dot=document.getElementById('dot');
+    const soundLabel=document.getElementById('soundLabel');
+    const muteBtn=document.getElementById('mute');
+    let ac, g, isOn=false, toneInterval;
+
+    function setSound(on){
+      isOn=on; dot.classList.toggle('on', on); soundToggle.setAttribute('aria-pressed', on);
+      soundLabel.textContent = on ? 'SOUND: ON' : 'SOUND: OFF';
+      if(on){
+        if(!ac){
+          ac=new (window.AudioContext||window.webkitAudioContext)();
+          g=ac.createGain(); g.gain.value=0.03; g.connect(ac.destination);
+        }
+        // create a slowly evolving pad by cycling detuned oscillators
+        const makeVoice=(f,det)=>{
+          const o=ac.createOscillator(); o.type='sine'; o.frequency.value=f; o.detune.value=det;
+          const v=ac.createGain(); v.gain.value=0.001; o.connect(v).connect(g); o.start();
+          const t=ac.currentTime; v.gain.linearRampToValueAtTime(0.06,t+3); v.gain.linearRampToValueAtTime(0.02,t+10);
+          return {o,v};
+        };
+        const v1=makeVoice(220, -7), v2=makeVoice(277.18, +3), v3=makeVoice(329.63, +6);
+        toneInterval=setInterval(()=>{
+          const vv=makeVoice(220*Math.pow(2,Math.random()*0.5), (Math.random()*14-7));
+          setTimeout(()=>{vv.v.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+4); setTimeout(()=>vv.o.stop(), 4200);}, 2500);
+        }, 4000);
+      } else {
+        if(toneInterval) clearInterval(toneInterval);
+        if(g){ g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.3); }
+      }
+    }
+
+    soundToggle.addEventListener('click', ()=>{
+      if(!isOn && ac && ac.state==='suspended') ac.resume();
+      setSound(!isOn);
+    });
+    muteBtn.addEventListener('click', ()=>{ setSound(true); });
+  </script>
 </body>
 </html>
